@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Abstimmungssystem</title>
+</head>
+
+<body>
+
+<h1>Abstimmungssystem</h1>
+
+<form id="voteForm">
+
+  <div id="formContainer"></div>
+
+  <h2>Zugangscode</h2>
+  <input type="text" name="code" placeholder="Code eingeben">
+
+  <br><br>
+  <button type="submit">Absenden</button>
+
+</form>
+
+<p id="status"></p>
+
+<script>
+
+/* =========================
+   1. KONFIGURATION
+========================= */
+
+// Kategorien (beliebig erweiterbar)
+const kategorien = [
+  "Lustig",
+  "Sportlich"
+];
+
+// getrennte Namenslisten
+const jungenNamen = [
+  "Louis",
+  "Leo",
+  "Jannes",
+  "Milan",
+  "Jannek",
+  "Adrian",
+  "Jesko",
+  "Lukas",
+  "Osama",
+  "Friedrich"
+];
+
+const maedchenNamen = [
+  "Emmy",
+  "Pia",
+  "Joy",
+  "Hannah",
+  "Lyan",
+  "Fiona",
+  "Meva"
+  "Marta",
+  "Irene",
+  "Jana",
+  "Jule",
+  "Ruby",
+  "Melissa",
+  "Ina",
+  "Emma",
+  "Nele",
+  
+
+];
+
+/* =========================
+   2. FORMULAR ERZEUGEN
+========================= */
+
+const container = document.getElementById("formContainer");
+
+kategorien.forEach(kategorie => {
+
+  const div = document.createElement("div");
+
+  div.innerHTML = `
+    <h2>Kategorie: ${kategorie}</h2>
+
+    <p>Jungen:</p>
+    <select name="${kategorie.toLowerCase()}_jungen">
+      ${jungenNamen.map(n => `<option value="${n}">${n}</option>`).join("")}
+    </select>
+
+    <p>Mädchen:</p>
+    <select name="${kategorie.toLowerCase()}_maedchen">
+      ${maedchenNamen.map(n => `<option value="${n}">${n}</option>`).join("")}
+    </select>
+
+    <hr>
+  `;
+
+  container.appendChild(div);
+});
+
+/* =========================
+   3. SUBMIT LOGIK
+========================= */
+
+document.getElementById("voteForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const formData = new FormData(this);
+  const data = {};
+
+  for (let [key, value] of formData.entries()) {
+    data[key] = value;
+  }
+
+  console.log("Abstimmung:", data);
+
+  document.getElementById("status").innerText =
+    "Abgesendet (lokal gespeichert)";
+});
+
+</script>
+
+</body>
+</html>
