@@ -33,28 +33,25 @@
 <h1>🗳 Abstimmungssystem</h1>
 
 <div class="box">
-<form id="voteForm">
+  <form id="voteForm">
+    <div id="formContainer"></div>
 
-  <div id="formContainer"></div>
+    <h2>Zugangscode</h2>
+    <input type="text" name="code" placeholder="Code eingeben" required>
 
-  <h2>Zugangscode</h2>
-  <input type="text" name="code" placeholder="Code eingeben" required>
+    <br><br>
+    <button type="submit">Absenden</button>
+  </form>
 
-  <br><br>
-  <button type="submit">Absenden</button>
-
-</form>
-
-<p id="status"></p>
+  <p id="status"></p>
 </div>
 
-<!-- ✅ WICHTIG: Richtiger Supabase Import -->
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <script>
-
 /* =========================
-   KONFIGURATION
+   KONFIG
 ========================= */
 
 const kategorien = ["Lustig", "Sportlich"];
@@ -71,7 +68,7 @@ const maedchenNamen = [
 ];
 
 /* =========================
-   UI ERSTELLEN
+   UI
 ========================= */
 
 const container = document.getElementById("formContainer");
@@ -101,7 +98,7 @@ kategorien.forEach(kategorie => {
 });
 
 /* =========================
-   SUPABASE VERBINDUNG
+   SUPABASE
 ========================= */
 
 const supabaseUrl = "https://yetoitdarnogitqoujsz.supabase.co";
@@ -110,7 +107,7 @@ const supabaseKey = "sb_publishable_X1__Wrr6_F0zZpMVQJCpyg_UD0fIK94";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 /* =========================
-   FORM ABSENDEN
+   SUBMIT
 ========================= */
 
 document.getElementById("voteForm").addEventListener("submit", async (e) => {
@@ -119,7 +116,6 @@ document.getElementById("voteForm").addEventListener("submit", async (e) => {
   const status = document.getElementById("status");
   const button = e.target.querySelector("button");
 
-  // 🚫 Schon abgestimmt (Browser)
   if (localStorage.getItem("voted") === "true") {
     status.innerText = "⛔ Du hast bereits abgestimmt!";
     return;
@@ -133,74 +129,66 @@ document.getElementById("voteForm").addEventListener("submit", async (e) => {
 
   const now = new Date();
 
-  // 🔍 12h Sperre prüfen
-  const { data: userData, error: userError } = await supabaseClient
+  /* =========================
+     12h CHECK (Frontend)
+  ========================= */
+
+  const { data: userData } = await supabaseClient
     .from("users")
     .select("*")
     .eq("user_id", user_id)
     .single();
 
-  if (userError && userError.code !== "PGRST116") {
-    console.log(userError);
-    status.innerText = "❌ Fehler beim Prüfen!";
-    return;
-  }
-
   if (userData) {
     const diff = (now - new Date(userData.last_vote)) / (1000 * 60 * 60);
+
     if (diff < 12) {
       status.innerText = "⛔ Du kannst erst nach 12h wieder abstimmen!";
       return;
     }
   }
 
-  // 🗳 Votes speichern
+  /* =========================
+     VOTES SPEICHERN
+  ========================= */
+
   for (let kategorie of kategorien) {
     const jungen = form.get(`${kategorie}_jungen`);
     const maedchen = form.get(`${kategorie}_maedchen`);
 
-    const { error } = await supabaseClient.from("votes").insert([
-      {
-        user_id,
-        category: kategorie,
-        name: jungen,
-        code
-      },
-      {
-        user_id,
-        category: kategorie,
-        name: maedchen,
-        code
-      }
-    ]);
+    const { error } = await supabaseClient
+      .from("votes")
+      .insert([
+        { user_id, category: kategorie, name: jungen, code },
+        { user_id, category: kategorie, name: maedchen, code }
+      ]);
 
     if (error) {
       console.log(error);
-      status.innerText = "❌ Fehler beim Speichern!";
+      status.innerText = JSON.stringify(error);
       return;
     }
   }
 
-  // 👤 User aktualisieren
-  const { error: upsertError } = await supabaseClient.from("users").upsert({
+  /* =========================
+     USER UPDATE
+  ========================= */
+
+  await supabaseClient.from("users").upsert({
     user_id,
     last_vote: now
   });
 
-  if (upsertError) {
-    console.log(upsertError);
-    status.innerText = "❌ Fehler beim Speichern!";
-    return;
-  }
+  /* =========================
+     DONE
+  ========================= */
 
-  // ✅ Erfolgreich
   localStorage.setItem("voted", "true");
   button.disabled = true;
 
   status.innerText = "✅ Stimme erfolgreich gespeichert!";
   e.target.reset();
 });
-
 </script>
 
 </body>
