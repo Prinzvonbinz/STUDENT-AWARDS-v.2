@@ -46,26 +46,21 @@
   <p id="status"></p>
 </div>
 
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <script>
+
 /* =========================
    KONFIG
 ========================= */
 
+const ADMIN_CODE = "69678492930303039";
+
 const kategorien = ["Lustigste/r","Immer gut gelaunt","Beste/r Zeichner/in","Größte/r Freestyler/in","Sportlichste/r","Lauteste/r","Aggressivste/r","Sympathischste/r","Red Bull Süchtigste/r","Mental am stabilsten","Beste Style"];
 
-const jungenNamen = [
-  "Louis","Leo","Jannes","Milan","Jannek",
-  "Adrian","Jesko","Lukas","Osama","Friedrich"
-];
+const jungenNamen = ["Louis","Leo","Jannes","Milan","Jannek","Adrian","Jesko","Lukas","Osama","Friedrich"];
 
-const maedchenNamen = [
-  "Emmy","Pia","Joy","Hannah","Lyan","Fiona",
-  "Meva","Marta","Irene","Jana","Jule","Ruby",
-  "Melissa","Ina","Emma","Nele"
-];
+const maedchenNamen = ["Emmy","Pia","Joy","Hannah","Lyan","Fiona","Meva","Marta","Irene","Jana","Jule","Ruby","Melissa","Ina","Emma","Nele"];
 
 /* =========================
    UI
@@ -116,13 +111,10 @@ document.getElementById("voteForm").addEventListener("submit", async (e) => {
   const status = document.getElementById("status");
   const button = e.target.querySelector("button");
 
-  if (localStorage.getItem("voted") === "true") {
-    status.innerText = "⛔ Du hast bereits abgestimmt!";
-    return;
-  }
-
   const form = new FormData(e.target);
   const code = form.get("code");
+
+  const isAdmin = code === ADMIN_CODE;
 
   const user_id = localStorage.getItem("user_id") || crypto.randomUUID();
   localStorage.setItem("user_id", user_id);
@@ -130,26 +122,33 @@ document.getElementById("voteForm").addEventListener("submit", async (e) => {
   const now = new Date();
 
   /* =========================
-     12h CHECK (Frontend)
+     NORMALER BLOCK (nur wenn KEIN Admin)
   ========================= */
 
-  const { data: userData } = await supabaseClient
-    .from("users")
-    .select("*")
-    .eq("user_id", user_id)
-    .single();
+  if (!isAdmin && localStorage.getItem("voted") === "true") {
+    status.innerText = "⛔ Du hast bereits abgestimmt!";
+    return;
+  }
 
-  if (userData) {
-    const diff = (now - new Date(userData.last_vote)) / (1000 * 60 * 60);
+  if (!isAdmin) {
+    const { data: userData } = await supabaseClient
+      .from("users")
+      .select("*")
+      .eq("user_id", user_id)
+      .single();
 
-    if (diff < 12) {
-      status.innerText = "⛔ Du kannst erst nach 12h wieder abstimmen!";
-      return;
+    if (userData) {
+      const diff = (now - new Date(userData.last_vote)) / (1000 * 60 * 60);
+
+      if (diff < 12) {
+        status.innerText = "⛔ Du kannst erst nach 12h wieder abstimmen!";
+        return;
+      }
     }
   }
 
   /* =========================
-     VOTES SPEICHERN
+     SPEICHERN
   ========================= */
 
   for (let kategorie of kategorien) {
@@ -180,13 +179,18 @@ document.getElementById("voteForm").addEventListener("submit", async (e) => {
   });
 
   /* =========================
-     DONE
+     LOCAL STORAGE (nur normaler User)
   ========================= */
 
-  localStorage.setItem("voted", "true");
-  button.disabled = true;
+  if (!isAdmin) {
+    localStorage.setItem("voted", "true");
+  }
 
-  status.innerText = "✅ Stimme erfolgreich gespeichert!";
+  button.disabled = true;
+  status.innerText = isAdmin
+    ? "👑 Admin-Stimme gespeichert!"
+    : "✅ Stimme erfolgreich gespeichert!";
+
   e.target.reset();
 });
 </script>
