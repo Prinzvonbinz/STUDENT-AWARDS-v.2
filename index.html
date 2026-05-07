@@ -1,3 +1,56 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Abstimmungssystem</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      background: #f2f2f2;
+    }
+
+    .box {
+      background: white;
+      padding: 20px;
+      width: 350px;
+      margin: auto;
+      margin-top: 30px;
+      border-radius: 10px;
+    }
+
+    select, input, button {
+      width: 90%;
+      padding: 8px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>🗳 Abstimmungssystem</h1>
+
+<div class="box">
+<form id="voteForm">
+
+  <div id="formContainer"></div>
+
+  <h2>Zugangscode</h2>
+  <input type="text" name="code" placeholder="Code eingeben" required>
+
+  <br><br>
+  <button type="submit">Absenden</button>
+
+</form>
+
+<p id="status"></p>
+</div>
+
+<!-- ✅ WICHTIG: Richtiger Supabase Import -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
 <script>
 
 /* =========================
@@ -66,7 +119,7 @@ document.getElementById("voteForm").addEventListener("submit", async (e) => {
   const status = document.getElementById("status");
   const button = e.target.querySelector("button");
 
-  // 🚫 Schon abgestimmt?
+  // 🚫 Schon abgestimmt (Browser)
   if (localStorage.getItem("voted") === "true") {
     status.innerText = "⛔ Du hast bereits abgestimmt!";
     return;
@@ -149,3 +202,6 @@ document.getElementById("voteForm").addEventListener("submit", async (e) => {
 });
 
 </script>
+
+</body>
+</html>
