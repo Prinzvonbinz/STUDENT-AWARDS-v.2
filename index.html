@@ -56,11 +56,23 @@
 
 const ADMIN_CODE = "69678492930303039";
 
-const kategorien = ["Lustigste/r","Immer gut gelaunt","Beste/r Zeichner/in","Größte/r Freestyler/in","Sportlichste/r","Lauteste/r","Aggressivste/r","Sympathischste/r","Red Bull Süchtigste/r","Mental am stabilsten","Beste Style"];
+const kategorien = [
+  "Lustigste/r","Immer gut gelaunt","Beste/r Zeichner/in",
+  "Größte/r Freestyler/in","Sportlichste/r","Lauteste/r",
+  "Aggressivste/r","Sympathischste/r","Red Bull Süchtigste/r",
+  "Mental am stabilsten","Beste Style"
+];
 
-const jungenNamen = ["Louis","Leo","Jannes","Milan","Jannek","Adrian","Jesko","Lukas","Osama","Friedrich"];
+const jungenNamen = [
+  "Louis","Leo","Jannes","Milan","Jannek",
+  "Adrian","Jesko","Lukas","Osama","Friedrich"
+];
 
-const maedchenNamen = ["Emmy","Pia","Joy","Hannah","Lyan","Fiona","Meva","Marta","Irene","Jana","Jule","Ruby","Melissa","Ina","Emma","Nele"];
+const maedchenNamen = [
+  "Emmy","Pia","Joy","Hannah","Lyan","Fiona",
+  "Meva","Marta","Irene","Jana","Jule","Ruby",
+  "Melissa","Ina","Emma","Nele"
+];
 
 /* =========================
    UI
@@ -96,16 +108,21 @@ kategorien.forEach(kategorie => {
    SUPABASE
 ========================= */
 
-const supabaseUrl = "https://yetoitdarnogitqoujsz.supabase.co";
-const supabaseKey = "sb_publishable_X1__Wrr6_F0zZpMVQJCpyg_UD0fIK94";
+const supabaseUrl =
+  "https://yetoitdarnogitqoujsz.supabase.co";
 
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+const supabaseKey =
+  "sb_publishable_X1__Wrr6_F0zZpMVQJCpyg_UD0fIK94";
+
+const supabaseClient =
+  supabase.createClient(supabaseUrl, supabaseKey);
 
 /* =========================
    SUBMIT
 ========================= */
 
 document.getElementById("voteForm").addEventListener("submit", async (e) => {
+
   e.preventDefault();
 
   const status = document.getElementById("status");
@@ -116,13 +133,14 @@ document.getElementById("voteForm").addEventListener("submit", async (e) => {
 
   const isAdmin = code === ADMIN_CODE;
 
-  const user_id = localStorage.getItem("user_id") || crypto.randomUUID();
+  const user_id =
+    localStorage.getItem("user_id") ||
+    crypto.randomUUID();
+
   localStorage.setItem("user_id", user_id);
 
-  const now = new Date();
-
   /* =========================
-     NORMALER BLOCK (nur wenn KEIN Admin)
+     NORMAL USER BLOCK
   ========================= */
 
   if (!isAdmin && localStorage.getItem("voted") === "true") {
@@ -130,36 +148,36 @@ document.getElementById("voteForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  if (!isAdmin) {
-    const { data: userData } = await supabaseClient
-      .from("users")
-      .select("*")
-      .eq("user_id", user_id)
-      .single();
-
-    if (userData) {
-      const diff = (now - new Date(userData.last_vote)) / (1000 * 60 * 60);
-
-      if (diff < 12) {
-        status.innerText = "⛔ Du kannst erst nach 12h wieder abstimmen!";
-        return;
-      }
-    }
-  }
+  /* =========================
+     OPTIONAL 12H LOGIK (ENTFERNT)
+  ========================= */
 
   /* =========================
      SPEICHERN
   ========================= */
 
+  const now = new Date();
+
   for (let kategorie of kategorien) {
+
     const jungen = form.get(`${kategorie}_jungen`);
     const maedchen = form.get(`${kategorie}_maedchen`);
 
     const { error } = await supabaseClient
       .from("votes")
       .insert([
-        { user_id, category: kategorie, name: jungen, code },
-        { user_id, category: kategorie, name: maedchen, code }
+        {
+          user_id,
+          category: kategorie,
+          name: jungen,
+          code
+        },
+        {
+          user_id,
+          category: kategorie,
+          name: maedchen,
+          code
+        }
       ]);
 
     if (error) {
@@ -170,16 +188,7 @@ document.getElementById("voteForm").addEventListener("submit", async (e) => {
   }
 
   /* =========================
-     USER UPDATE
-  ========================= */
-
-  await supabaseClient.from("users").upsert({
-    user_id,
-    last_vote: now
-  });
-
-  /* =========================
-     LOCAL STORAGE (nur normaler User)
+     USER STATE
   ========================= */
 
   if (!isAdmin) {
@@ -187,12 +196,14 @@ document.getElementById("voteForm").addEventListener("submit", async (e) => {
   }
 
   button.disabled = true;
+
   status.innerText = isAdmin
     ? "👑 Admin-Stimme gespeichert!"
     : "✅ Stimme erfolgreich gespeichert!";
 
   e.target.reset();
 });
+
 </script>
 
 </body>
